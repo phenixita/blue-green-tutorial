@@ -23,6 +23,7 @@ env:
   AZURE_WEBAPP_NAME: mfbluegreentutorial    # set this to the name of your Azure Web App
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   DOTNET_VERSION: '6.x'                 # set this to the .NET Core version to use
+  AZURE_RESOURCE_GROUP: 'rg-blue-green-tutorial'                 # set this to the .NET Core version to use
 
 on:
   push:
@@ -88,5 +89,19 @@ jobs:
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
           slot-name: preprod
-    
+          
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Swap slots
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az webapp deployment slot swap \
+              -g ${{ env.AZURE_RESOURCE_GROUP }} \
+              -n ${{ env.AZURE_WEBAPP_NAME }} \
+              --slot preprod \
+              --target-slot production
           
