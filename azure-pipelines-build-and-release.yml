@@ -4,7 +4,7 @@ pool:
   vmImage: ubuntu-latest
 
 stages:
-  - stage: build-stage
+  - stage: build_stage
     displayName: Build
     jobs:
     - job: build-job
@@ -16,7 +16,7 @@ stages:
           artifact: 'website'
           publishLocation: 'pipeline'
 
-  - stage: deploy-stage
+  - stage: deploy_stage
     displayName: Deploy
     jobs:
       - deployment: deployment-job
