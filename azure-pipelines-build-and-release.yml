@@ -7,7 +7,7 @@ stages:
   - stage: build_stage
     displayName: Build
     jobs:
-    - job: build-job
+    - job: build_job
       steps:
       - script: dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)
       - task: PublishPipelineArtifact@1
@@ -19,7 +19,7 @@ stages:
   - stage: deploy_stage
     displayName: Deploy
     jobs:
-      - deployment: deployment-job
+      - deployment: deployment_job
         environment: Production
         displayName: Deploy on Azure
         strategy:
