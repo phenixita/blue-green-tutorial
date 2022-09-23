@@ -3,11 +3,47 @@ trigger: none
 pool:
   vmImage: ubuntu-latest
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+stages:
+  - stage: build-stage
+    displayName: Build
+    jobs:
+    - job: build-job
+      steps:
+      - script: dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: '$(Build.ArtifactStagingDirectory)'
+          artifact: 'website'
+          publishLocation: 'pipeline'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  - stage: deploy-stage
+    displayName: Deploy
+    jobs:
+      - deployment: deployment-job
+        environment: Production
+        displayName: Deploy on Azure
+        strategy:
+          runOnce:
+            deploy:
+             steps:
+              - task: AzureRmWebAppDeployment@4
+                inputs:
+                  ConnectionType: 'AzureRM'
+                  azureSubscription: 'sub-vse(dce4a55c-1d65-46ec-bd2b-831801fc6bab)'
+                  appType: 'webAppLinux'
+                  WebAppName: 'miferracbluegreen'
+                  deployToSlotOrASE: true
+                  ResourceGroupName: 'blue-green-rg'
+                  SlotName: 'preprod'
+                  packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
+                  RuntimeStack: 'DOTNETCORE|6.0'
+            routeTraffic:
+             steps:
+              - task: AzureAppServiceManage@0
+                inputs:
+                  azureSubscription: 'sub-vse(dce4a55c-1d65-46ec-bd2b-831801fc6bab)'
+                  Action: 'Swap Slots'
+                  WebAppName: 'miferracbluegreen'
+                  ResourceGroupName: 'blue-green-rg'
+                  SourceSlot: 'preprod'
+            
